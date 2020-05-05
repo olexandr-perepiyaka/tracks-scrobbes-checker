@@ -1,0 +1,8 @@
+{
+  "name": "Scrobbles at Google Play Music Store",
+  "description": "Show Lastfm Scrobbles on Google Play Music Store pages",
+  "version": "0.1",
+  "permissions": ["https://play.google.com/store/*"],
+  "browser_action": {"default_popup": "popup.html"},
+  "manifest_version": 2
+}
