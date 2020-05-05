@@ -1,6 +1,6 @@
 {
-  "name": "Scrobbles at Google Play Music Store",
-  "description": "Show Lastfm Scrobbles on Google Play Music Store pages",
+  "name": "Tracks Scrobbles Checker",
+  "description": "Show is displayed on web page tracks was scrobbled at Lastfm",
   "version": "0.1",
   "permissions": ["https://play.google.com/store/*"],
   "browser_action": {"default_popup": "popup.html"},
