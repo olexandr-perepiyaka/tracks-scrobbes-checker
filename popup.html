@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<head>
+    <script src='popup.js'></script>
+    <style>
+        tr:hover {
+            background: #EEE;
+        }
+        td {
+            padding: 0px;
+        }
+        th {
+            background-color: #FFF;
+            /* border-bottom: solid 1px #0000008a; */
+            position: sticky;
+            top: 0; /* Don't forget this, required for the stickiness */
+        }
+        a {
+            text-decoration: none;
+        }
+        ::-webkit-scrollbar {
+            height: 7px;
+            width: 7px;
+        }
+        ::-webkit-scrollbar-track {/* track */
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {/* Handle */
+            background: #888; 
+        }
+        ::-webkit-scrollbar-thumb:hover {/* Handle on hover */
+            background: #555; 
+        }
+        div.nav {
+            padding-bottom: 4px;
+        }
+        .nav span {
+            font-size: 13px;
+            padding: 3px 5px;
+            cursor: pointer;
+        }
+        .nav span.active {
+            border-bottom: 1px solid black;
+        }
+
+    </style>
+</head>
+
+<body style="width: 600px;margin: 2px;">
+    <div class="nav">
+        <span class='active' id="get-page-tracks">Page Tracks</span>
+        <span id="get-page-artists">Page Artists</span>
+        <span id="get-recent-tracks">Last.FM Recent</span>
+    </div>
+    <table id=tracks style="width: 100%;border-spacing: 1px 0;">
+        <tr>
+            <th>Artist (<a id="get-artists-scrobbles" href="#" title="">scrobbles</a>)</th>
+            <th>Track</th>
+            <th title="Loved">&hearts;</th>
+            <th title="Scrobbles">Scrobbles</th>
+        </tr>
+    </table>
+</body>
+
+</html>
