@@ -1,8 +1,20 @@
 {
-  "name": "Tracks Scrobbles Checker",
-  "description": "Show is displayed on web page tracks was scrobbled at Lastfm",
-  "version": "0.1",
-  "permissions": ["https://play.google.com/store/*"],
-  "browser_action": {"default_popup": "popup.html"},
-  "manifest_version": 2
+    "name": "Track Scrobble Checker",
+    "description": "Check if tracks on page was scrobbled",
+    "version": "0.2",
+    "minimum_chrome_version": "16.0.884",
+    "permissions": [
+        "downloads",
+        "<all_urls>",
+        "storage"
+    ],
+    "browser_action": {
+        "default_popup": "popup.html",
+        "default_icon": "icon48.png"
+    },
+    "options_ui": {
+        "page": "options.html",
+        "open_in_tab": false
+    },
+    "manifest_version": 2
 }
