@@ -42,20 +42,24 @@
         .nav span.active {
             border-bottom: 1px solid black;
         }
+        div.nav-counter {
+            display: inline;
+        }
 
     </style>
 </head>
 
 <body style="width: 600px;margin: 2px;">
     <div class="nav">
-        <span class='active' id="get-page-tracks">Page Tracks</span>
-        <span id="get-page-artists">Page Artists</span>
+        <span class='active' id="get-page-tracks"><div class="nav-counter"></div>Page Track(s)</span>
+        <span id="get-page-artists"><div class="nav-counter"></div>Page Artist(s)</span>
         <span id="get-recent-tracks">Last.FM Recent</span>
     </div>
-    <table id=tracks style="width: 100%;border-spacing: 1px 0;">
+    <table id="tracks" style="width: 100%;border-spacing: 1px 0;">
         <tr>
-            <th>Artist (<a id="get-artists-scrobbles" href="#" title="">scrobbles</a>)</th>
+            <th>Artist<!-- (<a id="get-artists-scrobbles" href="#" title="">scrobbles</a>)--></th>
             <th>Track</th>
+            <th>Album</th>
             <th title="Loved">&hearts;</th>
             <th title="Scrobbles">Scrobbles</th>
         </tr>
