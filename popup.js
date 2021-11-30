@@ -20,7 +20,6 @@ function clearTable() {
 
 function showTracksTable(tracksArr) {
     var i, tr, td, xhr = [];
-    var xhttp = new XMLHttpRequest();
 
     tracksTable = document.getElementById('tracks');
 
@@ -49,6 +48,15 @@ function showTracksTable(tracksArr) {
         td.style.verticalAlign = 'top';
         td.style.textAlign = 'center';
         td.style.marginLeft = '2px';
+        td.className = 'alb-td';
+        td.innerText = '?';
+        tr.appendChild(td);
+
+        td = document.createElement('td');
+        td.style.borderTop = 'solid 1px #0000008a';
+        td.style.verticalAlign = 'top';
+        td.style.textAlign = 'center';
+        td.style.marginLeft = '2px';
         td.className = 'lk-td';
         td.innerText = '?';
         tr.appendChild(td);
@@ -65,83 +73,91 @@ function showTracksTable(tracksArr) {
 
         tracksTable.appendChild(tr);
 
-        var url =
-            'https://ws.audioscrobbler.com/2.0/?method=user.getTrackScrobbles'
-            + '&user=' + lastfmNickname
-            + '&api_key=' + lastfmAPIKey
-            + '&artist=' + encodeURIComponent(tracksArr[i].artist).replace(/%20/g, '+')
-            + '&track=' + encodeURIComponent(tracksArr[i].track).replace(/%20/g, '+')
-            + '&format=json'
-        ;
-        console.log(url);
+        getTrackScrobbles(tracksArr[i].artist, tracksArr[i].track, i);
 
-        (function(i){
-            xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-            xhr.onreadystatechange = function () {
-                var scResStr = '';
-                var scrResTD = document.querySelector('tr#tr-' + i + ' > td.scr-td');
-                if (this.readyState == 4) {
-                    if (this.status == 200) {
-                        var myObj = JSON.parse(this.responseText);
-                        /*console.log('myObj.trackscrobbles[\'track\'][0]: ' + myObj.trackscrobbles['track'][0]);*/
-                        if (myObj.trackscrobbles['track'][0] !== undefined) {
-                            var t = 0;
-                            for (t in myObj.trackscrobbles['track']) {
-                                date_uts = parseInt(myObj.trackscrobbles['track'][t].date.uts) * 1000;
-                                track_date = new Date(date_uts);
-                                track_date_time = track_date.toLocaleString("sv-SE");
-                                track_date_only = track_date_time.slice(0, 10);
-                                track_time_only = track_date_time.slice(-9);
-                                scResStr += (scResStr == '' ? '' : "\r\n") + '<a href="https://www.last.fm/user/' + lastfmNickname + '/library?&rangetype=1day&from=' + track_date_only + '" target="_blank"> ' + track_date_only + '</a>' + track_time_only;
-                            }
-                        } else {
-                            scResStr = 'not scrobbled';
-                        }
-                    } else {
-                        scResStr = 'error ' + this.status + ' ' + this.statusText;
-                    }
-                    scrResTD.innerHTML = scResStr;
-                    //console.log('scResStr: ' + scResStr);
-                }
-            };
-            xhr.send();
-        })(i);
-
-        url =
-            'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
-            + '&user=' + lastfmNickname
-            + '&api_key=' + lastfmAPIKey
-            + '&artist=' + encodeURIComponent(tracksArr[i].artist).replace(/%20/g, '+')
-            + '&track=' + encodeURIComponent(tracksArr[i].track).replace(/%20/g, '+')
-            + '&format=json'
-        ;
-        console.log(url);
-
-        (function(i){
-            xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-            xhr.onreadystatechange = function () {
-                var lkResTD = document.querySelector('tr#tr-' + i + ' > td.lk-td');
-                if (this.readyState == 4) {
-                    if (this.status == 200) {
-                        lkResTD.innerHTML = '';
-                        var myObj = JSON.parse(this.responseText);
-                        //console.log('myObj.error: ', myObj.error, 'myObj.message', myObj.message);
-                        if (myObj.error !== undefined) {
-                            lkResTD.innerHTML = '<span title="' + myObj.message + '">-</span>';
-                        }
-                        if (myObj.track && myObj.track.userloved == 1) {
-                            lkResTD.innerHTML = '<font color="red" title="Loved track">&hearts;</font>';
-                        }
-                    } else {
-                        lkResTD.innerHTML = 'error ' + this.status + ' ' + this.statusText;
-                    }
-                }
-            };
-            xhr.send();
-        })(i);
+        trackGetInfo(tracksArr[i].artist, tracksArr[i].track, i);
     }
+}
+
+function getTrackScrobbles(artist, track, idx) {
+    var url =
+        'https://ws.audioscrobbler.com/2.0/?method=user.getTrackScrobbles'
+        + '&user=' + lastfmNickname
+        + '&api_key=' + lastfmAPIKey
+        + '&artist=' + encodeURIComponent(artist).replace(/%20/g, '+')
+        + '&track=' + encodeURIComponent(track).replace(/%20/g, '+')
+        + '&format=json'
+    ;
+    console.log(url);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function () {
+        var scResStr, albResStr;
+        scResStr = albResStr = '';
+        var scrResTD = document.querySelector('tr#tr-' + idx + ' > td.scr-td');
+        var albResTD = document.querySelector('tr#tr-' + idx + ' > td.alb-td');
+        if (this.readyState == 4) {
+            if (this.status == 200) {
+                var myObj = JSON.parse(this.responseText);
+                /*console.log('myObj.trackscrobbles[\'track\'][0]: ' + myObj.trackscrobbles['track'][0]);*/
+                if (myObj.trackscrobbles['track'][0] !== undefined) {
+                    var t = 0;
+                    for (t in myObj.trackscrobbles['track']) {
+                        date_uts = parseInt(myObj.trackscrobbles['track'][t].date.uts) * 1000;
+                        track_date = new Date(date_uts);
+                        track_date_time = track_date.toLocaleString("sv-SE");
+                        track_date_only = track_date_time.slice(0, 10);
+                        track_time_only = track_date_time.slice(-9);
+                        scResStr += (scResStr == '' ? '' : "\r\n") + '<a href="https://www.last.fm/user/' + lastfmNickname + '/library?&rangetype=1day&from=' + track_date_only + '" target="_blank"> ' + track_date_only + '</a>' + track_time_only;
+                        albResStr += (albResStr == '' ? '' : "<br/>") + myObj.trackscrobbles['track'][t].album['#text'];
+                    }
+                } else {
+                    scResStr = 'not scrobbled';
+                }
+            } else {
+                scResStr = 'error ' + this.status + ' ' + this.statusText;
+            }
+            scrResTD.innerHTML = scResStr;
+            albResTD.innerHTML = albResStr;
+            //console.log('scResStr: ' + scResStr);
+        }
+    };
+    xhr.send();
+}
+
+function trackGetInfo(artist, track, idx) {
+    var url =
+        'https://ws.audioscrobbler.com/2.0/?method=track.getInfo'
+        + '&user=' + lastfmNickname
+        + '&api_key=' + lastfmAPIKey
+        + '&artist=' + encodeURIComponent(artist).replace(/%20/g, '+')
+        + '&track=' + encodeURIComponent(track).replace(/%20/g, '+')
+        + '&format=json'
+    ;
+    console.log(url);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, true);
+    xhr.onreadystatechange = function () {
+        var lkResTD = document.querySelector('tr#tr-' + idx + ' > td.lk-td');
+        if (this.readyState == 4) {
+            if (this.status == 200) {
+                lkResTD.innerHTML = '';
+                var myObj = JSON.parse(this.responseText);
+                //console.log('myObj.error: ', myObj.error, 'myObj.message', myObj.message);
+                if (myObj.error !== undefined) {
+                    lkResTD.innerHTML = '<span title="' + myObj.message + '">-</span>';
+                }
+                if (myObj.track && myObj.track.userloved == 1) {
+                    lkResTD.innerHTML = '<font color="red" title="Loved track">&hearts;</font>';
+                }
+            } else {
+                lkResTD.innerHTML = 'error ' + this.status + ' ' + this.statusText;
+            }
+        }
+    };
+    xhr.send();
 }
 
 function getArtistsScrobbles(tracksArr) {
@@ -222,6 +238,9 @@ function parseArtists(i, responseText) {
     }
 }
 
+function showRecent() {
+}
+
 function OutputLog(scrlogArr) {
     for(mn in scrlogArr) {
         console.log(scrlogArr[mn]);
@@ -229,6 +248,7 @@ function OutputLog(scrlogArr) {
 }
 
 chrome.extension.onRequest.addListener(function (result) {
+    document.querySelector('#get-page-tracks > div').innerText = result.tracksArr.length + " ";
     OutputLog(result.scrlogArr);
     showTracksTable(result.tracksArr);
     //tracksArr = result.tracksArr;
@@ -238,11 +258,11 @@ chrome.extension.onRequest.addListener(function (result) {
         clearTable();
         showTracksTable(result.tracksArr);
     }
-    document.getElementById('get-artists-scrobbles').onclick = function() {
+    /*document.getElementById('get-artists-scrobbles').onclick = function() {
         document.querySelector('span.active').removeAttribute('class');
         this.className = "active";
         getArtistsScrobbles(result.tracksArr);
-    }
+    }*/
     document.getElementById('get-recent-tracks').onclick = function() {
         document.querySelector('span.active').removeAttribute('class');
         this.className = "active";

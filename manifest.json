@@ -1,7 +1,7 @@
 {
     "name": "Track Scrobble Checker",
     "description": "Check if tracks on page was scrobbled",
-    "version": "0.2",
+    "version": "0.4",
     "minimum_chrome_version": "16.0.884",
     "permissions": [
         "downloads",
