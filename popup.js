@@ -1,10 +1,3 @@
-chrome.storage.sync.get({
-    lastfmNickname: '[unknown]'
-}, function (items) {
-    console.log('items.lastfmNickname:', items.lastfmNickname) ;
-});
-
-
 const lastfmNickname = 'xander667';
 const lastfmAPIKey = 'a088b0c423e72ee735fd4b1e592341b4';
 var lastfm_artists_names = [];
@@ -239,6 +232,107 @@ function parseArtists(i, responseText) {
 }
 
 function showRecent() {
+    chrome.storage.sync.get({
+        lastfmNickname: '[unknown]'
+    }, function (items) {
+        storagelastfmNickname = items.lastfmNickname;
+        console.log('[6]storagelastfmNickname', storagelastfmNickname);
+    
+        var i, tr, td, xhr = [];
+
+        const tracks_URL = 'https://ws.audioscrobbler.com/2.0/?method=user.getRecentTracks&extended=1'
+            + '&api_key=' + lastfmAPIKey
+            + '&user=' + encodeURI(lastfmNickname)
+            + '&limit=30'
+            + '&format=json'
+        ;
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var responseJSON = JSON.parse(this.responseText);
+                var trackObjects = responseJSON.recenttracks.track;
+
+                tracksTable = document.getElementById('tracks');
+
+                for (i = 0; i < trackObjects.length; i++) {
+                    td = document.createElement('td');
+                    td.style.borderTop = 'solid 1px #0000008a';
+                    td.style.verticalAlign = 'top';
+                    td.innerText = trackObjects[i].artist.name;
+                    tr = document.createElement('tr');
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.style.borderTop = 'solid 1px #0000008a';
+                    td.style.verticalAlign = 'top';
+                    td.style.maxWidth = '435px';
+                    td.style.overflowX = 'overlay';
+                    td.style.marginLeft = '2px';
+                    td.innerText = trackObjects[i].name;
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.style.borderTop = 'solid 1px #0000008a';
+                    td.style.verticalAlign = 'top';
+                    td.style.textAlign = 'center';
+                    td.style.marginLeft = '2px';
+                    td.className = 'alb-td';
+                    td.innerText = trackObjects[i].album['#text'];
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.style.borderTop = 'solid 1px #0000008a';
+                    td.style.verticalAlign = 'top';
+                    td.style.textAlign = 'center';
+                    td.style.marginLeft = '2px';
+                    td.className = 'lk-td';
+                    td.innerText = '';
+                    if (trackObjects[i].loved == 1) {
+                        td.innerHTML = '<font color="red" title="Loved track">&hearts;</font>';
+                    }
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.style.borderTop = 'solid 1px #0000008a';
+                    td.style.verticalAlign = 'top';
+                    td.style.textAlign = 'right';
+                    td.style.width = '110px';
+                    td.style.marginLeft = '2px';
+                    td.className = 'scr-td';
+                    if (trackObjects[i].date) {
+                        date_uts = parseInt(trackObjects[i].date.uts) * 1000;
+                        track_date = new Date(date_uts);
+                        td.innerText = track_date.toLocaleString("sv-SE");
+                    } else {
+                        td.innerText = 'scrobbling now';
+                    }
+                    tr.appendChild(td);
+
+                    tracksTable.appendChild(tr);
+                }
+
+            } else {
+                console.log('this.readyState: ' + this.readyState);
+                console.log('this.status: ' + this.status);
+
+                if (this.readyState == 4 && this.status == 500) {
+                    var errJSONObj = JSON.parse(this.responseText);
+                    console.log('errJSONObj.error: ' + errJSONObj.error);
+                    console.log('errJSONObj.message: ' + errJSONObj.message);
+                    document.getElementById('result').innerText = 'Error ' + errJSONObj.error + ' (' + errJSONObj.message + ')';
+                }
+
+                if (this.readyState == 4 && this.status == 0) {
+                    document.getElementById('result').innerText = 'Unknown Error. Server response not received.';
+                }
+            }
+        }
+
+        xhttp.open("GET", tracks_URL, true);
+        xhttp.send();
+    });
+
 }
 
 function OutputLog(scrlogArr) {
@@ -250,7 +344,13 @@ function OutputLog(scrlogArr) {
 chrome.extension.onRequest.addListener(function (result) {
     document.querySelector('#get-page-tracks > div').innerText = result.tracksArr.length + " ";
     OutputLog(result.scrlogArr);
-    showTracksTable(result.tracksArr);
+    if (result.tracksArr.length == 0)  {
+        document.querySelector('span.active').removeAttribute('class');
+        document.getElementById('get-recent-tracks').className = "active";
+        showRecent();
+    } else {
+        showTracksTable(result.tracksArr);
+    }
     //tracksArr = result.tracksArr;
     document.getElementById('get-page-tracks').onclick = function() {
         document.querySelector('span.active').removeAttribute('class');
@@ -267,6 +367,7 @@ chrome.extension.onRequest.addListener(function (result) {
         document.querySelector('span.active').removeAttribute('class');
         this.className = "active";
         clearTable();
+        showRecent();
     }
 });
 
@@ -274,7 +375,7 @@ window.onload = function () {
     chrome.windows.getCurrent(function (currentWindow) {
         chrome.tabs.query({ active: true, windowId: currentWindow.id }, function (activeTabs) {
             chrome.tabs.executeScript(
-                activeTabs[0].id, { file: 'send_tracks.js', allFrames: true }
+                activeTabs[0].id, { file: 'send_tracks.js', allFrames: false }
             );
         });
     });
