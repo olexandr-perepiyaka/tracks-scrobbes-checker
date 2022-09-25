@@ -5,10 +5,14 @@
     "minimum_chrome_version": "16.0.884",
     "permissions": [
         "downloads",
-        "<all_urls>",
-        "storage"
+        "storage",
+        "scripting",
+        "tabs"
     ],
-    "browser_action": {
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {
         "default_popup": "popup.html",
         "default_icon": "icon48.png"
     },
@@ -16,5 +20,5 @@
         "page": "options.html",
         "open_in_tab": false
     },
-    "manifest_version": 2
+    "manifest_version": 3
 }

@@ -179,4 +179,4 @@ if (tracksArr.length == 0) {
     }
 }
 
-chrome.extension.sendRequest({tracksArr: tracksArr, scrlogArr: scrlogArr});
+chrome.runtime.sendMessage({tracksArr: tracksArr, scrlogArr: scrlogArr});
