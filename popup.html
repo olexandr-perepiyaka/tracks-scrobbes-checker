@@ -45,11 +45,14 @@
         div.nav-counter {
             display: inline;
         }
-
+        .artist-desc {
+            vertical-align: top;
+            width: 99%;
+        }
     </style>
 </head>
 
-<body style="/*width: 600px;*/margin: 2px;">
+<body style="width: 380px; margin: 2px;">
     <div class="nav">
         <span class='active' id="get-page-tracks"><div class="nav-counter"></div>Page Track(s)</span>
         <span id="get-page-artists"><div class="nav-counter"></div>Page Artist(s)</span>
@@ -63,6 +66,20 @@
             <th title="Loved">&hearts;</th>
             <th title="Scrobbles">Scrobbles</th>
         </tr>
+    </table>
+    <table id="artistsTBL" style="width: 100%;border-spacing: 1px 0;display: none;">
+    <template id="artist-tr-tmpl">
+        <tr id="tr-0">
+            <td>
+                <img style="width: 46px;" src="star.png">
+            </td>
+            <td class="artist-desc">
+                <a target="_blank" class="artist-url"><strong class="artist-name"></strong></a><br/>
+                <i>tags:</i> <span class="tags"></span><br/>
+                <i>scrobbles:</i> <a class="library-link"><strong class="scrobbles"></strong></a>
+            </td>
+        </tr>
+    </template>
     </table>
 </body>
 

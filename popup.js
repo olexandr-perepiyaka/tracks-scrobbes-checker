@@ -2,19 +2,18 @@ var lastfmNickname;
 const lastfmAPIKey = 'a088b0c423e72ee735fd4b1e592341b4';
 var lastfm_artists_names = [];
 var lastfm_artists_playcount = [];
-var tracksArr = [];
-var tracksTable = document.getElementById('tracks');
+var msgResult;
 
-function clearTable() {
-    while (tracksTable.children.length > 1) {
-        tracksTable.removeChild(tracksTable.children[tracksTable.children.length - 1])
+function clearTable(table) {
+    while (table.children.length > 1) {
+        table.removeChild(table.children[table.children.length - 1])
     }
 }
 
-function showTracksTable(tracksArr) {
+function showTracksTable() {
     var i, tr, td, xhr = [];
-
-    tracksTable = document.getElementById('tracks');
+    console.log('msgResult.tracksArr.length: ', msgResult.tracksArr.length);
+    var tracksArr = msgResult.tracksArr;
 
     for (i = 0; i < tracksArr.length; i++) {
         //console.log('i: ' + i + ', tracksArr[i]: ' + tracksArr[i]);
@@ -64,21 +63,12 @@ function showTracksTable(tracksArr) {
         td.innerText = '[request]';
         tr.appendChild(td);
 
-        tracksTable.appendChild(tr);
+        document.getElementById('tracks').appendChild(tr);
 
         getTrackScrobbles(tracksArr[i].artist, tracksArr[i].track, i);
 
         trackGetInfo(tracksArr[i].artist, tracksArr[i].track, i);
     }
-}
-
-function showArtists(tracksArr) {
-    var artists = [];
-
-    for (i = 0; i < tracksArr.length; i++) {
-        //if () {}
-    }
-
 }
 
 function getTrackScrobbles(artist, track, idx) {
@@ -159,6 +149,60 @@ function trackGetInfo(artist, track, idx) {
             }
         }
     };
+    xhr.send();
+}
+
+function showArtists() {
+    var artist, url, xhr, cloneTr;
+    for (i = 0; i < msgResult.artistsArr.length; i++) {
+        artist = msgResult.artistsArr[i];
+        (function (i, artist) {
+            url =
+                'https://ws.audioscrobbler.com/2.0/?method=artist.getInfo'
+                + '&artist=' + encodeURIComponent(artist).replace(/%20/g, '+')
+                + '&username=' + lastfmNickname
+                + '&api_key=' + lastfmAPIKey
+                + '&format=json'
+            ;
+            console.log(url);
+            xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.responseType = "json";
+            xhr.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200 && this.response.error === undefined) {
+                    cloneTr = document.getElementById('artist-tr-tmpl').content.cloneNode(true);
+                    cloneTr.querySelector('tr').id = 'tr-' + i;
+                    cloneTr.querySelector('strong.artist-name').textContent = artist;
+                    cloneTr.querySelector('a').href = this.response.artist.url;
+                    cloneTr.querySelector('strong.scrobbles').innerText = this.response.artist.stats.userplaycount;
+                    if (parseInt(this.response.artist.stats.userplaycount) > 0) {
+                        cloneTr.querySelector('a.library-link').target = '_blank';
+                        cloneTr.querySelector('a.library-link').href = 'https://www.last.fm/user/' + lastfmNickname + '/library/music/' + encodeURIComponent(artist).replace(/%20/g, '+');
+                    }
+                    var tagsSpan = cloneTr.querySelector('span.tags');
+                    for (t in this.response.artist.tags.tag) {
+                        tagsSpan.innerText += (tagsSpan.innerText == '' ? '' : ', ') + this.response.artist.tags.tag[t].name;
+                    }
+                    document.getElementById('artistsTBL').appendChild(cloneTr);
+                    getArtistAvatar(artist, i);
+                }
+            }
+            xhr.send();
+        })(i, artist);
+    }
+}
+
+function getArtistAvatar(artist, idx) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            var artistTR = document.getElementById('artistsTBL').querySelector('#tr-' + idx);
+            var imgSrc = this.responseXML.head.querySelector('meta[property$="image"]').content.replace(/\/ar0\//, '/avatar70s/')
+            artistTR.querySelector('img').src = imgSrc;
+        }
+    }
+    xhr.open("GET", "https://www.last.fm/music/" + encodeURIComponent(artist).replace(/%20/g, '+'), true);
+    xhr.responseType = "document";
     xhr.send();
 }
 
@@ -256,7 +300,7 @@ function showRecent() {
             var responseJSON = JSON.parse(this.responseText);
             var trackObjects = responseJSON.recenttracks.track;
 
-            tracksTable = document.getElementById('tracks');
+            //tracksTable = document.getElementById('tracks');
 
             for (i = 0; i < trackObjects.length; i++) {
                 td = document.createElement('td');
@@ -312,7 +356,7 @@ function showRecent() {
                 }
                 tr.appendChild(td);
 
-                tracksTable.appendChild(tr);
+                document.getElementById('tracks').appendChild(tr);
             }
         } else {
             console.log('this.readyState: ' + this.readyState);
@@ -345,6 +389,8 @@ chrome.runtime.onMessage.addListener(function (result) {
     chrome.storage.sync.get({
         lastfmNickname: '[unknown]'
     }, function (items) {
+        msgResult = result;
+        console.log('msgResult.tracksArr.length: ', msgResult.tracksArr.length);
         lastfmNickname = items.lastfmNickname;
         console.log('lastfmNickname:', lastfmNickname);
 
@@ -362,7 +408,8 @@ chrome.runtime.onMessage.addListener(function (result) {
             };
             document.body.appendChild(btn);
         } else {
-            document.body.style.width = '600px';
+            console.log('msgResult.tracksArr.length: ', msgResult.tracksArr.length);
+            //document.body.style.width = '600px';
             document.querySelector('#get-recent-tracks > div').innerText = lastfmNickname + "'s ";
     
             document.querySelector('#get-page-tracks > div').innerText = result.tracksArr.length + " ";
@@ -370,16 +417,20 @@ chrome.runtime.onMessage.addListener(function (result) {
             if (result.tracksArr.length == 0)  {
                 document.querySelector('span.active').removeAttribute('class');
                 document.getElementById('get-recent-tracks').className = "active";
+                
                 showRecent();
             } else {
-                showTracksTable(result.tracksArr);
+                console.log('msgResult.tracksArr.length: ', msgResult.tracksArr.length);
+                showTracksTable();
             }
 
             document.getElementById('get-page-tracks').onclick = function() {
+                document.getElementById('artistsTBL').style.display = 'none';
+                document.getElementById('tracks').style.display = 'block';
                 document.querySelector('span.active').removeAttribute('class');
                 this.className = "active";
-                clearTable();
-                showTracksTable(result.tracksArr);
+                clearTable(document.getElementById('tracks'));
+                showTracksTable();
             }
 
             /*document.getElementById('get-artists-scrobbles').onclick = function() {
@@ -389,16 +440,20 @@ chrome.runtime.onMessage.addListener(function (result) {
             }*/
 
             document.getElementById('get-page-artists').onclick = function() {
+                document.getElementById('artistsTBL').style.display = 'block';
+                document.getElementById('tracks').style.display = 'none';
                 document.querySelector('span.active').removeAttribute('class');
                 this.className = "active";
-                clearTable();
+                clearTable(document.getElementById('artistsTBL'));
                 showArtists(result.tracksArr);
             }
 
             document.getElementById('get-recent-tracks').onclick = function() {
+                document.getElementById('artistsTBL').style.display = 'none';
+                document.getElementById('tracks').style.display = 'block';
                 document.querySelector('span.active').removeAttribute('class');
                 this.className = "active";
-                clearTable();
+                clearTable(document.getElementById('tracks'));
                 showRecent();
             }
         }
@@ -408,13 +463,10 @@ chrome.runtime.onMessage.addListener(function (result) {
 window.onload = function () {
     chrome.windows.getCurrent(function (currentWindow) {
         chrome.tabs.query({ active: true, windowId: currentWindow.id }, function (activeTabs) {
-            chrome.scripting.executeScript(
-                {
+            chrome.scripting.executeScript({
                     target: {tabId: activeTabs[0].id},
                     files: ['send_tracks.js']
-                },
-                (result) => {console.log('executeScript callback result:', result);}
-            );
+            }/*,(result) => {console.log('executeScript callback result:', result);}*/);
         });
     });
 };

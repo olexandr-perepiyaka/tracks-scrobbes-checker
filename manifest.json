@@ -1,12 +1,13 @@
 {
     "name": "Tracks Scrobbles Checker",
     "description": "Check if tracks on page was scrobbled",
-    "version": "0.6",
+    "version": "0.7",
     "minimum_chrome_version": "16.0.884",
     "permissions": [
         "downloads",
         "storage",
         "scripting",
+        "sidePanel",
         "tabs"
     ],
     "host_permissions": [
@@ -19,6 +20,9 @@
     "options_ui": {
         "page": "options.html",
         "open_in_tab": false
+    },
+    "side_panel": {
+        "default_path": "popup.html"
     },
     "manifest_version": 3
 }

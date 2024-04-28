@@ -1,4 +1,4 @@
-var tracksArr = [], scrlogArr = [], artistStr, trackStr, trackObj, splittedArtistStr;
+var tracksArr = [], artistsArr = [], splittedArtist = [], scrlogArr = [], artistStr, trackStr, trackObj, splittedArtistStr;
 
 var spotifyTracksDivs = document.querySelectorAll('div[data-testid="tracklist-row"]');
 scrlogArr.push('[SPOTIFY] spotifyTracksDivs.length: ' + spotifyTracksDivs.length);
@@ -127,7 +127,9 @@ if (tracksArr.length == 0 && document.getElementById('browse-page')) {
     
     scrlogArr.push('[YOUTUBE MUSIC ALBUM] ytmusicAlbumTracks.length: ' + ytmusicAlbumTracks.length);
     if (ytmusicAlbumTracks.length > 0) {
-        artistStr = document.querySelectorAll('yt-formatted-string.style-scope.ytmusic-detail-header-renderer')[1].textContent.split(" • ")[1];
+        if (document.querySelectorAll('yt-formatted-string.style-scope.ytmusic-detail-header-renderer').length > 0) {
+            artistStr = document.querySelectorAll('yt-formatted-string.style-scope.ytmusic-detail-header-renderer')[1].textContent.split(" • ")[1];
+        }
 
         ytmusicAlbumTracks.forEach(function (trackDiv) {
             trackStr = trackDiv.querySelector('div.title-column.style-scope.ytmusic-responsive-list-item-renderer').innerText.replace(/\s+/g, ' ').trim(); 
@@ -179,4 +181,31 @@ if (tracksArr.length == 0) {
     }
 }
 
-chrome.runtime.sendMessage({tracksArr: tracksArr, scrlogArr: scrlogArr});
+for (i = 0; i < tracksArr.length; i++) {
+    if (artistsArr.indexOf(tracksArr[i].artist) < 0) {
+        artistsArr.push(tracksArr[i].artist);
+    }
+    console.log('tracksArr[i].artist: ', tracksArr[i].artist);
+    splittedArtist = tracksArr[i].artist.replace(/ & /g, ', ').split(', ');
+    console.log('splittedArtist: ', splittedArtist);
+    for (j = 0; j < splittedArtist.length; j++) {
+        if (artistsArr.indexOf(splittedArtist[j]) < 0) {
+            artistsArr.push(splittedArtist[j]);
+        }
+    }
+    var featArtist = /\(feat. (.*?)\)/.exec(tracksArr[i].track);
+    console.log('featArtist: ', featArtist);
+    if (featArtist) {
+        if (artistsArr.indexOf(featArtist[1]) < 0) {
+            artistsArr.push(featArtist[1]);
+        }
+        splittedArtist = featArtist[1].replace(/ & /g, ', ').split(', ');
+        for (j = 0; j < splittedArtist.length; j++) {
+            if (artistsArr.indexOf(splittedArtist[j]) < 0) {
+                artistsArr.push(splittedArtist[j]);
+            }
+        }
+    }
+}
+
+chrome.runtime.sendMessage({tracksArr: tracksArr, scrlogArr: scrlogArr, artistsArr: artistsArr});
